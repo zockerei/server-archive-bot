@@ -1,6 +1,10 @@
+import os
+import time
 import discord
 import yaml
 import logging.config
+import requests
+import secrets
 
 # Intents
 intents = discord.Intents.all()
@@ -19,10 +23,11 @@ bot_logger.info('Logging setup complete')
 with open('config.yaml') as config_file:
     bot_config = yaml.safe_load(config_file)
     bot_config = bot_config['bot_config']
-    token, server_id, archiving, channel_ids = (
+    token, server_id, archiving, folder_path, channel_ids = (
         bot_config['token'],
         bot_config['server_id'],
         bot_config['archiving'],
+        bot_config['folder_path'],
         bot_config['channel_ids']
     )
 bot_logger.debug(f'{token} | {server_id} | {channel_ids}')
@@ -37,12 +42,11 @@ async def on_ready():
     retrieves server member IDs and adds them to the database, and adds an admin user.
     """
     bot_logger.info(f'Logged in as {client.user}')
+    bot_logger.info('Bot ready')
 
     if archiving:
         bot_logger.debug(f'Archiving pictures in these channels: {channel_ids}')
         await archive_pictures()
-
-    bot_logger.info('Bot ready')
 
 
 @client.event
@@ -60,21 +64,43 @@ async def on_message(message: discord.Message):
         return  # Ignore messages from the bot
 
     for attachment in message.attachments:
-        if attachment.url.endswith(('.png', '.jpg', '.jpeg', '.bmp', '.webp')):
-            bot_logger.debug(f'Attachment: {attachment}')
+        bot_logger.debug(f'Attachment: {attachment}')
 
 
 async def archive_pictures():
     """
-    Archive attachments in the channels
-    :return:
+    Archives attachments from specified channels.
     """
-    for channel_id in channel_ids:
-        bot_logger.debug(f'channel_id: {channel_id}')
-        channel = client.get_channel(channel_id)
-        bot_logger.debug(f'channel: {channel}')
-        async for message in channel.history(limit=None):
-            for attachment in message.attachments:
-                bot_logger.debug(f'Attachment: {attachment}')
+    try:
+        for channel_id in channel_ids:
+            bot_logger.debug(f'Channel_id: {channel_id}')
+            channel = client.get_channel(channel_id)
+            bot_logger.debug(f'Channel: {channel}')
+
+            async for message in channel.history(limit=None):
+                for attachment in message.attachments:
+                    download_attachment(attachment)
+
+            for thread in channel.threads:
+                bot_logger.debug(f'Thread: {thread}')
+                async for message in thread.history(limit=None):
+                    for attachment in message.attachments:
+                        download_attachment(attachment)
+
+    except Exception as e:
+        bot_logger.error(f"An error occurred: {e}")
+
+
+def download_attachment(attachment):
+    bot_logger.info(f'Attachment: {attachment}')
+    response = requests.get(attachment.url)
+    bot_logger.debug(f'Response: {response}')
+    file_extension = os.path.splitext(attachment.filename)[1]
+    random_filename = secrets.token_hex(10) + file_extension
+    file_path = os.path.join(folder_path, random_filename)
+    with open(file_path, 'wb') as file:
+        file.write(response.content)
+    time.sleep(1)
+
 
 client.run(token, log_handler=None)
