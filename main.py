@@ -23,14 +23,13 @@ bot_logger.info('Logging setup complete')
 with open('config.yaml') as config_file:
     bot_config = yaml.safe_load(config_file)
     bot_config = bot_config['bot_config']
-    token, server_id, archiving, folder_path, channel_ids = (
+    token, archiving, folder_path, channel_ids = (
         bot_config['token'],
-        bot_config['server_id'],
         bot_config['archiving'],
         bot_config['folder_path'],
         bot_config['channel_ids']
     )
-bot_logger.debug(f'{token} | {server_id} | {channel_ids}')
+attachment_links_path = os.path.join(folder_path, 'links.log')
 bot_logger.info('bot_config loaded')
 
 
@@ -51,10 +50,7 @@ async def on_ready():
 
 @client.event
 async def on_message(message: discord.Message):
-    """Handle the event when a message is received.
-
-    This function processes all received messages, checks if they contain specific words,
-    and performs corresponding actions such as updating word counts or handling commands.
+    """Downloads the attachment if the message is one
 
     Parameters:
         message (discord.Message): The message received by the bot.
@@ -64,7 +60,7 @@ async def on_message(message: discord.Message):
         return  # Ignore messages from the bot
 
     for attachment in message.attachments:
-        bot_logger.debug(f'Attachment: {attachment}')
+        download_attachment(attachment)
 
 
 async def archive_pictures():
@@ -87,19 +83,34 @@ async def archive_pictures():
                     for attachment in message.attachments:
                         download_attachment(attachment)
 
+        bot_logger.info('Completed download of all attachments')
+
     except Exception as e:
         bot_logger.error(f"An error occurred: {e}")
 
 
 def download_attachment(attachment):
+    """Download an attachment and save it to a specified folder.
+
+    Parameters:
+        attachment: The attachment object to download.
+    """
     bot_logger.info(f'Attachment: {attachment}')
     response = requests.get(attachment.url)
     bot_logger.debug(f'Response: {response}')
+
+    # Random file name
     file_extension = os.path.splitext(attachment.filename)[1]
     random_filename = secrets.token_hex(10) + file_extension
     file_path = os.path.join(folder_path, random_filename)
+
+    # Download to folder + add link to log file
     with open(file_path, 'wb') as file:
+        bot_logger.debug('Download complete')
         file.write(response.content)
+    with open(attachment_links_path, 'a') as log_file:
+        bot_logger.debug('Adds link to log file')
+        log_file.write(f'{attachment.url}\n')
     time.sleep(1)
 
 
