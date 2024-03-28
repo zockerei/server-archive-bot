@@ -1,3 +1,5 @@
 .idea/
 config.yaml
 logger.log
+build/
+main.spec
