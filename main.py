@@ -32,6 +32,14 @@ with open('config.yaml') as config_file:
 attachment_links_path = os.path.join(folder_path, 'links.log')
 bot_logger.info('bot_config loaded')
 
+# Create a set to store downloaded attachments' URLs
+downloaded_attachments = set()
+
+# Load downloaded attachments from file
+if os.path.exists(attachment_links_path):
+    with open(attachment_links_path, 'r') as attachments_file:
+        downloaded_attachments = set(line.strip() for line in attachments_file)
+
 
 @client.event
 async def on_ready():
@@ -95,9 +103,12 @@ def download_attachment(attachment):
     Parameters:
         attachment: The attachment object to download.
     """
-    bot_logger.info(f'Attachment: {attachment}')
+    if attachment.url in downloaded_attachments:
+        bot_logger.info(f'Attachment {attachment.filename} has been downloaded before, skipping.')
+        return
+
+    bot_logger.info(f'Downloading attachment: {attachment.filename}')
     response = requests.get(attachment.url)
-    bot_logger.debug(f'Response: {response}')
 
     # Random file name
     file_extension = os.path.splitext(attachment.filename)[1]
@@ -105,13 +116,17 @@ def download_attachment(attachment):
     file_path = os.path.join(folder_path, random_filename)
 
     # Download to folder + add link to log file
-    with open(file_path, 'wb') as file:
-        bot_logger.debug('Download complete')
-        file.write(response.content)
-    with open(attachment_links_path, 'a') as log_file:
-        bot_logger.debug('Adds link to log file')
-        log_file.write(f'{attachment.url}\n')
+    with open(file_path, 'wb') as output:
+        output.write(response.content)
+    bot_logger.info(f'Download complete: {attachment.filename}')
     time.sleep(1)
+
+    # Add the attachment's URL to the set of downloaded attachments
+    downloaded_attachments.add(attachment.url)
+
+    # Save the attachment's URL to the file
+    with open(attachment_links_path, 'a') as file:
+        file.write(f'{attachment.url}\n')
 
 
 client.run(token, log_handler=None)
