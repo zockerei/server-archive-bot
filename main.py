@@ -67,8 +67,9 @@ async def on_message(message: discord.Message):
         bot_logger.debug('Message from bot')
         return  # Ignore messages from the bot
 
-    for attachment in message.attachments:
-        download_attachment(attachment)
+    if message.channel.id in channel_ids:
+        for attachment in message.attachments:
+            download_attachment(attachment)
 
 
 async def archive_pictures():
