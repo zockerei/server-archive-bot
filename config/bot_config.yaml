@@ -1,0 +1,7 @@
+token: your_token
+archiving: False
+folder_path: your_folder_path
+webhooks:
+  - your_webhook_url
+channel_ids:
+    - your_channel_id
