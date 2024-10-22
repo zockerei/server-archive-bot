@@ -3,29 +3,29 @@ import yaml
 import logging.config
 
 # Function to load the logging configuration
-def setup_logging(default_path='logging_config.yaml'):
+def setup_logging(logging_path='config/logging_config.yaml'):
     """Setup logging configuration"""
     try:
-        with open(default_path, 'r') as file:
+        with open(logging_path, 'r') as file:
             config = yaml.safe_load(file.read())
         logging.config.dictConfig(config)
     except FileNotFoundError:
-        print(f"Logging configuration file not found: {default_path}")
+        print(f"Logging configuration file not found: {logging_path}")
     except yaml.YAMLError as e:
         print(f"Error parsing YAML file: {e}")
     except Exception as e:
         print(f"Unexpected error in Logging Configuration: {e}")
 
 # Function to load the bot configuration
-def load_bot_config():
+def load_bot_config(bot_config_path='config/bot_config.yaml'):
     """Loads bot configuration from a YAML file.
 
     Returns:
         tuple: A tuple containing the bot token, archiving status, folder path, and channel IDs.
     """
-    with open('config.yaml', 'r') as config_file:
+    with open(bot_config_path, 'r') as config_file:
         config = yaml.safe_load(config_file)
-        bot_config = config['bot_config']
+        bot_config = config
         
         token = bot_config['token']
         archiving = bot_config['archiving']
@@ -35,7 +35,7 @@ def load_bot_config():
     return token, archiving, folder_path, channel_ids
 
 # Function to load downloaded attachments from file
-def load_downloaded_attachments(attachment_links_path):
+def load_downloaded_attachments(attachment_links_path='logs/links.log'):
     """Loads a set of downloaded attachment URLs from a file.
 
     Args:
