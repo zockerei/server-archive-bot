@@ -3,7 +3,7 @@ import discord
 import requests
 import secrets
 import logging
-from config import setup_logging, load_bot_config, load_downloaded_attachments
+from config.config import setup_logging, load_bot_config, load_downloaded_attachments
 
 # Intents
 intents = discord.Intents.all()
