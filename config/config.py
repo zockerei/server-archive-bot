@@ -35,7 +35,7 @@ def load_bot_config(bot_config_path='config/bot_config.yaml'):
     return token, archiving, folder_path, channel_ids
 
 # Function to load downloaded attachments from file
-def load_downloaded_attachments(attachment_links_path='logs/links.log'):
+def load_downloaded_attachments(attachment_links_path='links.log'):
     """Loads a set of downloaded attachment URLs from a file.
 
     Args:
