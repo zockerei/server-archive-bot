@@ -1,4 +1,6 @@
 .idea/
 config/config.txt
-config/__pycache__/
+config/bot_config.yaml
+__pycache__/
 logs/
+venv/

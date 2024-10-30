@@ -2,33 +2,45 @@ version: 1
 disable_existing_loggers: False
 
 formatters:
-    basic:
-        format: '[{asctime}] [{levelname:<8}] {name}: {message}'
-        datefmt: '%Y-%m-%d %H:%M:%S'
-        style: '{'
+  basic:
+    (): config.CustomFormatter
+    format: '{asctime} [{levelname:<8}] {name}: {message}'
+    datefmt: '%Y-%m-%d %H:%M:%S'
+    style: '{'
+
+  file_formatter:
+    format: '[{asctime}] [{levelname:<8}] {name}: {message}'
+    datefmt: '%Y-%m-%d %H:%M:%S'
+    style: '{'
 
 handlers:
-    file:
-        class: logging.handlers.TimedRotatingFileHandler
-        formatter: basic
-        filename: logs/logger.log
-        encoding: utf-8
-        when: W0
-        interval: 1
-        backupCount: 4
+  rotating_file:
+    class: logging.handlers.TimedRotatingFileHandler
+    formatter: file_formatter
+    when: W0
+    interval: 1
+    backupCount: 4
+    encoding: utf-8
 
-    console:
-        class: logging.StreamHandler
-        formatter: basic
-        stream: ext://sys.stdout
+  console:
+    class: logging.StreamHandler
+    formatter: basic
+    stream: ext://sys.stdout
+
+  error_file:
+    class: logging.FileHandler
+    formatter: file_formatter
+    encoding: utf-8
+    mode: w
+    level: ERROR
 
 loggers:
-    discord:
-        level: INFO
-        handlers: [file, console]
-        propagate: false
+  discord:
+    level: INFO
+    handlers: [rotating_file, error_file, console]
+    propagate: no
 
-    bot.main:
-        level: DEBUG
-        handlers: [file, console]
-        propagate: false
+  bot:
+    level: DEBUG
+    handlers: [rotating_file, error_file, console]
+    propagate: no
