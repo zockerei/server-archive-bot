@@ -1,11 +1,9 @@
 # Server Archive Bot
 
 ## Overview
-The Server Archive Bot is a Discord bot designed to archive image links from specified channels. It uses webhooks for notifications and stores data in a specified folder. The bot is equipped with a logging system to monitor its activities
-
-## Features
 - Archives image links from specified Discord channels and threads
 - Downloads and organizes attachments by channel and thread
+- If kept running, will archive new images as they are posted
 
 ## Project Structure
 ```bash
@@ -37,7 +35,6 @@ server-archive-bot/
    - Create a `config/bot_config.yaml` file with the following structure:
      - `token`: Your Discord bot token
      - `folder_path`: Path where archived data will be stored
-     - `webhooks`: List of webhook URLs for notifications
      - `channel_ids`: List of channel IDs to monitor
      - `archiving`: Set to `True` to enable archiving of past images
 
