@@ -117,7 +117,6 @@ class BotConfig:
                 config = yaml.safe_load(config_file)
                 self.token = config['token']
                 self.folder_path = config['folder_path']
-                self.webhooks = config['webhooks']
                 self.channel_ids = config['channel_ids']
                 self.archiving = config['archiving']
         except FileNotFoundError:
