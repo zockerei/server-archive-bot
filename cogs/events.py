@@ -31,19 +31,26 @@ class BotEvents(commands.Cog):
             self.bot_logger.debug('Ignoring message from self')
             return
 
-        # Check if the message is in a monitored channel or its thread
-        if (message.channel.id in self.bot.config.channel_ids or
-           (message.channel.parent and message.channel.parent.id in self.bot.config.channel_ids)):
+        is_monitored = message.channel.id in self.bot.config.channel_ids
+
+        # If not in monitored channel, check if it's a thread of a monitored channel
+        if not is_monitored and hasattr(message.channel, 'parent'):
+            is_monitored = message.channel.parent and message.channel.parent.id in self.bot.config.channel_ids
+            self.bot_logger.debug(f'Message is in a thread of a monitored channel: {message.channel.id}')
+
+        if is_monitored:
             channel_name = message.channel.name
-            thread_name = message.channel.name if isinstance(message.channel, discord.Thread) else None
+            thread_name = message.channel.name if hasattr(message.channel, 'parent') else None
             self.bot_logger.debug(f'Message is in a monitored channel or thread: {message.channel.id}')
 
             for attachment in message.attachments:
-                self.bot_logger.debug(f'Found attachment: {attachment.filename}')
+                self.bot_logger.info(f'Found attachment: {attachment.filename}')
                 try:
                     self.download_attachment(attachment, channel_name, thread_name)
                 except Exception as e:
                     self.bot_logger.error(f"Error downloading attachment {attachment.filename}: {e}")
+        else:
+            self.bot_logger.debug(f'Message is not in a monitored channel or thread: {message.channel.id}')
 
     async def archive_pictures(self):
         """Archives pictures from specified channels and their threads."""
