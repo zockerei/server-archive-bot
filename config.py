@@ -82,11 +82,9 @@ class BotConfig:
 
     Attributes:
         token (str): The bot token.
-        words (list): A list of words to track.
-        server_id (int): The ID of the server.
-        channel_id (int): The ID of the channel.
-        admin_ids (list): A list of admin user IDs.
-        disable_initial_scan (bool): Flag to disable initial scan.
+        folder_path (str): The path to the folder where attachments are saved.
+        channel_ids (list): A list of channel IDs that should be archived.
+        archiving (bool): Flag to enable archiving.
     """
 
     _instance = None
