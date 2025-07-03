@@ -64,18 +64,6 @@ def setup_logging():
         print(f"Unexpected error in Logging Configuration: {e}")
 
 
-def load_downloaded_attachments(attachment_links_path):
-    """Loads a set of downloaded attachment URLs from a file.
-
-    Returns:
-        set: A set of URLs of downloaded attachments.
-    """
-    if os.path.exists(attachment_links_path):
-        with open(attachment_links_path, 'r') as attachments_file:
-            return set(line.strip() for line in attachments_file)
-    return set()
-
-
 class BotConfig:
     """
     Singleton class to load and provide bot configuration.
@@ -85,6 +73,7 @@ class BotConfig:
         folder_path (str): The path to the folder where attachments are saved.
         channel_ids (list): A list of channel IDs that should be archived.
         archiving (bool): Flag to enable archiving.
+        db_path (str): Path to the SQLite database file.
     """
 
     _instance = None
@@ -117,12 +106,19 @@ class BotConfig:
                 self.folder_path = config['folder_path']
                 self.channel_ids = config['channel_ids']
                 self.archiving = config['archiving']
+                
+                # Database path with default
+                self.db_path = config.get('db_path', os.path.join(self.folder_path, 'attachments.db'))
+                
         except FileNotFoundError:
             logging.error(f"Bot configuration file not found: {CONFIG_FOLDER_PATH / 'bot_config.yaml'}")
+            raise
         except yaml.YAMLError as e:
             logging.error(f"Error parsing YAML file: {e}")
+            raise
         except Exception as e:
             logging.error(f"Unexpected error in Bot Configuration: {e}")
+            raise
 
 
 def get_bot_config():

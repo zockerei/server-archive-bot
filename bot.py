@@ -1,10 +1,11 @@
-import os
 import discord
 from discord.ext import commands
 import logging
-from config import setup_logging, get_bot_config, load_downloaded_attachments
+from config import setup_logging, get_bot_config
+from database import DatabaseManager
 from cogs.events import BotEvents
 import asyncio
+import atexit
 
 # Setup logging with the specified configuration path
 setup_logging()
@@ -19,21 +20,45 @@ bot_logger.debug(f'Intents setup complete: {intents}')
 # Create bot instance
 bot = commands.Bot(command_prefix='!', intents=intents)
 
-# Load bot configuration with the specified configuration path
+# Load bot configuration
 bot.config = get_bot_config()
-bot.attachment_links_path = os.path.join(bot.config.folder_path, 'links.log')
 bot_logger.info('Bot configuration loaded')
 
-# Create a set to store downloaded attachments' URLs
-bot.downloaded_attachments = load_downloaded_attachments(bot.attachment_links_path)
+# Initialize database
+bot.db_manager = DatabaseManager(bot.config.db_path)
+bot_logger.info('Database initialized')
+
+
+def cleanup():
+    """Clean up resources on exit."""
+    if hasattr(bot, 'db_manager'):
+        bot.db_manager.close()
+        bot_logger.info('Database connections closed')
+
+
+atexit.register(cleanup)
+
+
+@bot.event
+async def on_ready():
+    """Log bot readiness."""
+    bot_logger.info(f'Logged in as {bot.user}')
+    bot_logger.info('Bot ready')
 
 
 async def main():
     """
     Loads all cog extensions and starts the Discord bot.
     """
-    await bot.add_cog(BotEvents(bot))
-    await bot.start(bot.config.token)
+    try:
+        await bot.add_cog(BotEvents(bot))
+        await bot.start(bot.config.token)
+    except Exception as e:
+        bot_logger.error(f"Error starting bot: {e}")
+        raise
+    finally:
+        cleanup()
 
 
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())
