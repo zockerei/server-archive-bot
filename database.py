@@ -78,4 +78,4 @@ class DatabaseManager:
     def close(self):
         """Close database connections."""
         if hasattr(self._local, 'connection'):
-            self._local.connection.close() 
+            self._local.connection.close()
