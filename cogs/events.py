@@ -46,7 +46,7 @@ class BotEvents(commands.Cog):
             for attachment in message.attachments:
                 self.bot_logger.info(f'Found attachment: {attachment.filename}')
                 try:
-                    self.download_attachment(attachment, message.channel, channel_name, thread_name)
+                    self.download_attachment(attachment, message.channel, channel_name, thread_name, message.created_at)
                 except Exception as e:
                     self.bot_logger.error(f"Error downloading attachment {attachment.filename}: {e}")
         else:
@@ -67,7 +67,7 @@ class BotEvents(commands.Cog):
                     for attachment in message.attachments:
                         self.bot_logger.debug(f'Found attachment in history: {attachment.filename}')
                         try:
-                            self.download_attachment(attachment, channel, channel_name)
+                            self.download_attachment(attachment, channel, channel_name, None, message.created_at)
                         except Exception as e:
                             self.bot_logger.error(
                                 f"Error downloading attachment {attachment.filename} from history: {e}"
@@ -81,7 +81,9 @@ class BotEvents(commands.Cog):
                         for attachment in message.attachments:
                             self.bot_logger.debug(f'Found attachment in thread history: {attachment.filename}')
                             try:
-                                self.download_attachment(attachment, channel, channel_name, thread_name)
+                                self.download_attachment(
+                                    attachment, channel, channel_name, thread_name, message.created_at
+                                )
                             except Exception as e:
                                 self.bot_logger.error(
                                     f"Error downloading attachment {attachment.filename} from thread history: {e}"
@@ -91,7 +93,7 @@ class BotEvents(commands.Cog):
         except Exception as e:
             self.bot_logger.error(f"An error occurred during archiving: {e}")
 
-    def download_attachment(self, attachment, channel, channel_name: str, thread_name: str = None):
+    def download_attachment(self, attachment, channel, channel_name: str, thread_name: str = None, message_date=None):
         """Downloads an attachment if it hasn't been downloaded already."""
         # Check if already downloaded using database
         if self.bot.db_manager.is_downloaded(attachment.url):
@@ -107,11 +109,11 @@ class BotEvents(commands.Cog):
         directory_path.mkdir(parents=True, exist_ok=True)
 
         self.bot_logger.info(f'Downloading attachment: {attachment.filename}')
-        
+
         try:
             response = requests.get(attachment.url, timeout=30)
             response.raise_for_status()
-            
+
             # Generate random filename with original extension
             file_extension = Path(attachment.filename).suffix
             random_filename = f"{secrets.token_hex(10)}{file_extension}"
@@ -120,19 +122,20 @@ class BotEvents(commands.Cog):
             # Write file
             with open(file_path, 'wb') as output:
                 output.write(response.content)
-            
+
             # Add to database
             success = self.bot.db_manager.add_attachment(
                 url=attachment.url,
                 filename=attachment.filename,
-                channel_id=channel.id
+                channel_id=channel.id,
+                message_date=message_date
             )
-            
+
             if success:
                 self.bot_logger.info(f'Attachment saved as: {random_filename}')
             else:
                 self.bot_logger.debug(f'Attachment URL already in database: {attachment.url}')
-                
+
         except requests.RequestException as e:
             self.bot_logger.error(f"Failed to download attachment {attachment.filename}: {e}")
         except OSError as e:

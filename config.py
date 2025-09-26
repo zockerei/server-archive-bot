@@ -2,6 +2,10 @@ import os
 import yaml
 import logging.config
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Base directory of the project
 BASE_DIR = Path(__file__).resolve().parent
@@ -92,7 +96,10 @@ class BotConfig:
 
     def _load_config(self):
         """
-        Loads configuration from a YAML file.
+        Loads configuration from a YAML file and environment variables.
+
+        Bot token is loaded from BOT_TOKEN environment variable first,
+        falling back to YAML file if not found.
 
         Raises:
             FileNotFoundError: If the bot configuration file is not found.
@@ -102,14 +109,16 @@ class BotConfig:
         try:
             with open(CONFIG_FOLDER_PATH / 'bot_config.yaml', 'r') as config_file:
                 config = yaml.safe_load(config_file)
-                self.token = config['token']
+
+                # Load bot token from environment variable first, fallback to YAML
+                self.token = os.getenv('BOT_TOKEN', config.get('token'))
+                if not self.token:
+                    raise ValueError("Bot token not found in environment variable BOT_TOKEN or config file")
+
                 self.folder_path = config['folder_path']
                 self.channel_ids = config['channel_ids']
                 self.archiving = config['archiving']
-                
-                # Database path with default
-                self.db_path = config.get('db_path', os.path.join(self.folder_path, 'attachments.db'))
-                
+
         except FileNotFoundError:
             logging.error(f"Bot configuration file not found: {CONFIG_FOLDER_PATH / 'bot_config.yaml'}")
             raise

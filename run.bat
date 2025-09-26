@@ -10,10 +10,10 @@ if %errorlevel% neq 0 (
 :: Check if the virtual environment already exists
 if not exist venv (
     echo Creating virtual environment...
-    python -m venv venv
+    python -m venv .venv
 
     :: Activate the virtual environment
-    call venv\Scripts\activate
+    call .venv\Scripts\activate
 
     :: Upgrade pip
     python -m pip install --upgrade pip
@@ -24,7 +24,7 @@ if not exist venv (
     echo Setup complete. The virtual environment is now active.
 ) else (
     echo Virtual environment already exists. Activating...
-    call venv\Scripts\activate
+    call .venv\Scripts\activate
 )
 
 :: Start the bot

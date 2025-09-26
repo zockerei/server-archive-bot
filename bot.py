@@ -25,7 +25,7 @@ bot.config = get_bot_config()
 bot_logger.info('Bot configuration loaded')
 
 # Initialize database
-bot.db_manager = DatabaseManager(bot.config.db_path)
+bot.db_manager = DatabaseManager()
 bot_logger.info('Database initialized')
 
 
