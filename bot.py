@@ -12,9 +12,8 @@ setup_logging()
 bot_logger = logging.getLogger('bot')
 bot_logger.info('Logging setup complete')
 
-# Intents
-intents = discord.Intents.default()
-intents.message_content = True
+# Intents: guild cache, live guild messages, and attachment data on those messages
+intents = discord.Intents(guilds=True, guild_messages=True, message_content=True)
 bot_logger.debug(f'Intents setup complete: {intents}')
 
 # Create bot instance
